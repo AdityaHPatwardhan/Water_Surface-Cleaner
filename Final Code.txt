@@ -1,0 +1,230 @@
+#define F_CPU 16000000UL
+#include <avr/io.h>
+#include <inttypes.h>
+#include <stdio.h>		/* Include std. library file */
+#include <util/delay.h>		/* Include Delay header file */
+#define BAUD 9600
+#define MYUBRR F_CPU/16/BAUD -1
+
+unsigned int PWM=1000;
+unsigned int flag_left=0;
+unsigned int flag_right=0;
+unsigned int flag_rest=1;
+
+
+void stop()
+{
+	PORTD&= ~(1<<PD5);
+	PORTD&= ~(1<<PD6);
+	PORTC=0;
+	PORTC|= (1<<PC4);
+	PORTC|= (1<<PC3);
+	
+}
+void forward()
+{
+	PORTD|=  (1<<PD5);
+	PORTD&= ~(1<<PD6);
+	PORTC=0;
+	PORTC|= (1<<PC4);
+	
+}
+
+void reverse()
+{
+	PORTD|=  (1<<PD6);
+	PORTD&= ~(1<<PD5);
+	PORTC=0;
+	PORTC|= (1<<PC3);
+	
+}
+
+void left()
+{
+	PORTC=0;
+	PORTC|= (1<<PC5);
+	flag_left=1;
+	flag_right=0;
+	flag_rest=0;
+	
+	
+}
+
+void right()
+{
+	PORTC=0;
+	PORTC|= (1<<PC2);
+	flag_right=1;
+	flag_left=0;
+	flag_rest=0;
+}
+void speed1X()
+{
+	PWM=500;
+	PORTC=0;
+	PORTC|= (1<<PC5);
+	PORTC&= ~(1<<PC4);
+	PORTC&= ~(1<<PC3);
+	PORTC|= (1<<PC2);
+}
+void speed2X()
+{
+	
+	PWM=1000;
+	PORTC=0;
+	PORTC|= (1<<PC5);
+	PORTC&= ~(1<<PC4);
+	PORTC|=(1<<PC3);
+	PORTC&= ~(1<<PC2);
+}
+void speed3X()
+{   PWM=1500;
+	PORTC=0;
+	PORTC|= (1<<PC5);
+	PORTC&= ~(1<<PC4);
+	PORTC|= (1<<PC3);
+	PORTC|= (1<<PC2);
+	
+}
+
+void speed4X()
+{   PWM=2000;
+	PORTC=0;
+	PORTC|= (1<<PC5);
+	PORTC&= ~(1<<PC4);
+	PORTC&= ~(1<<PC3);
+	PORTC|= (1<<PC2);
+	
+	
+}
+
+void speed5X()
+{
+	
+	PWM=2499;
+	PORTC=0;
+	PORTC|= (1<<PC5);
+	PORTC|= (1<<PC4);
+	PORTC&= ~(1<<PC3);
+	PORTC&= ~(1<<PC2);
+}
+void servo_init()
+{
+	flag_rest=1;
+	flag_left=0;
+	flag_right=0;
+}
+int main()
+{   DDRC=0xFF;//making all ports output
+	DDRD=0XFF;
+	char ReceivedChar;//character for received data
+	DDRB = 0xFF;
+	TCNT1 = 0;	//timer 1 count =0
+	ICR1 = 2499;//top count
+	TCCR1A = (1<<WGM11)|(1<<COM1A1);
+	TCCR1B = (1<<WGM12)|(1<<WGM13)|(1<<CS10)|(1<<CS11);
+
+	UBRRH = (MYUBRR >> 8);
+	UBRRL = MYUBRR;
+	
+	//Enable The receiver and transmitter
+	UCSRB=(1<<RXEN)|(1<<TXEN);
+	UCSRC |= (1 << URSEL) |(1 << UCSZ1) | (1 << UCSZ0);    // Set frame: 8data, 1 stp
+	
+
+	while(1)
+	{   OCR1A=PWM;
+		if(flag_rest==1)
+		{
+				PORTB = (1 << PB0);
+				_delay_ms(1.5);
+				PORTB = (0 << PB0);
+				_delay_ms(15);
+		}
+		
+		if(flag_left==1)
+		{
+			PORTB = (1 << PB0);
+			_delay_ms(0.8);
+			PORTB = (0 << PB0);
+			_delay_ms(15);
+		}
+		if(flag_right==1)
+		{
+			PORTB = (1 << PB0);
+			_delay_ms(2.2);
+			PORTB = (0 << PB0);
+			_delay_ms(15);
+		}
+	
+		while ( (UCSRA & (1 << RXC)) == 0 ){};   // Wait until data is received
+		
+		ReceivedChar = UDR;                     // Read the data from the RX buffer
+		
+		if (ReceivedChar==('s'))
+		{
+			stop(); // stop the robot
+			
+		}
+		if	(ReceivedChar==('u'))
+		{
+			forward();//Move the robot forward
+		}
+		
+		if (ReceivedChar==('d'))
+		{
+			reverse();//move the propeller in reverse direction
+		}
+		if (ReceivedChar==('l'))
+		{
+			
+				left();//rotate servo to the left
+
+		}
+		if (ReceivedChar==('r'))
+		{   
+				right();//rotate servo to the right(actually left from our POV)
+			
+		}
+		if (ReceivedChar==('1'))
+		{
+			speed1X();
+			
+		}
+		if (ReceivedChar==('2'))
+		{
+			speed2X();
+			
+		}
+		if (ReceivedChar==('3'))
+		{
+			speed3X();
+			
+		}
+		if (ReceivedChar==('4'))
+		{
+			speed4X();
+			
+		}
+		if (ReceivedChar==('5'))
+		{
+			speed5X();
+			
+		}
+		
+		if (ReceivedChar==('6'))
+		{
+			servo_init();
+			
+		}
+		
+		else
+		{
+			continue;
+		}
+		
+		
+	}
+}
+
+

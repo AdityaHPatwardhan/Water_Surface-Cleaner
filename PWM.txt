@@ -1,0 +1,56 @@
+
+
+
+#include <avr/io.h>           //Required to use assembler commands
+#define F_CPU 16000000UL  // set the internal clock speed of 1 MHz
+#include <util/delay.h>
+
+int main(void)
+{
+	
+	DDRD = 0xFF;            //Make Port D output values
+	DDRB= 0XFF; 
+	DDRC=0XFF;
+	PORTB |= (1<<PB2);
+		
+       //CODE FOR PWM
+		//OCR2 = 255;
+		// set PWM for 50% duty cycle
+
+
+		TCCR2 |= (1 << COM21);
+		// set none-inverting mode
+
+		TCCR2 |= (1 << WGM21) | (1 << WGM20);
+		// set fast PWM Mode
+
+		//TCCR2 |= (1 << CS21);
+		// set prescaler to 8 and starts PWM
+
+
+		while (1)
+		{
+			OCR2 = 255;
+			TCCR2 |= (1 << CS21);
+			_delay_ms(5000);
+			
+			OCR2 = 192;
+			TCCR2 |= (1 << CS21);
+			_delay_ms(5000);
+			
+			OCR2 = 128;
+			TCCR2 |= (1 << CS21);
+			_delay_ms(5000);
+			
+			OCR2 = 64;
+			TCCR2 |= (1 << CS21);
+			_delay_ms(5000);
+			
+			OCR2 = 0;
+			TCCR2 |= (1 << CS21);
+			_delay_ms(5000);
+			
+		 }
+		 
+}
+

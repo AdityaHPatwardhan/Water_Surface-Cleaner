@@ -1,0 +1,25 @@
+#include <avr/io.h>           //Required to use assembler commands
+#define F_CPU 16000000UL  // set the internal clock speed of 1 MHz
+#include <util/delay.h>
+
+int main(void)
+{
+	
+	DDRD = 0xFF;            //Make Port D output values
+	DDRB= 0XFF; 
+	DDRC=0XFF;
+	while(1)
+	{   PORTB=0X00;
+		PORTD=0X00;
+		PORTC=0XFF;
+		_delay_ms(10000);
+		PORTC=0X00;
+		PORTD=0XFF;
+		PORTB=0XFF;
+		_delay_ms(5000);
+	}
+	          //Turn all output pins on port c off
+	
+
+}
+
